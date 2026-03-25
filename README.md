@@ -1,6 +1,8 @@
 # mynote
 
-个人 Markdown 笔记网页端：Express + SQLite，**图片以 BLOB 存在同一数据库**（表 `images`），通过 `GET /api/images/:id` 访问。
+个人 Markdown 笔记网页端：Express + **Node 内置 SQLite**（`node:sqlite`），**图片以 BLOB 存在同一数据库**（表 `images`），通过 `GET /api/images/:id` 访问。
+
+**环境要求**：**Node.js ≥ 22.13**（无需 `better-sqlite3` 等原生模块，线上 `npm install` 不必装编译工具链）。
 
 ## 本地开发
 
@@ -47,15 +49,15 @@ npm start
 ssh root@你的公网IP
 ```
 
-安装 Node.js 20（示例，可用 [NodeSource](https://github.com/nodesource/distributions) 或你熟悉的其它方式）：
+安装 **Node.js 22 LTS 或更新**（示例，可用 [NodeSource](https://github.com/nodesource/distributions)）：
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt update && sudo apt install -y nodejs build-essential
-node -v
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt update && sudo apt install -y nodejs
+node -v   # 应 ≥ v22.13
 ```
 
-`build-essential` 用于编译 `better-sqlite3`（若 `npm install` 报错再装）。
+本项目数据库使用 Node 内置 `node:sqlite`，**不需要** `build-essential` / `python3` 来编译 SQLite 驱动。
 
 ### 3. 上传项目代码
 
@@ -69,7 +71,7 @@ npm install
 npm run build
 ```
 
-若 `better-sqlite3` 安装失败，确认已装 `build-essential`，必要时安装 `python3`。
+若 `npm install` 仍失败，检查 Node 版本是否满足 `package.json` 里的 `engines`；启动时若出现 **SQLite experimental** 提示，属当前 Node 版本提示，可忽略或日后升级 Node。
 
 ### 5. 配置 `PUBLIC_BASE_URL`（与访问方式一致）
 
@@ -113,11 +115,20 @@ export PUBLIC_BASE_URL=http://你的公网IP
 
 ### 7. Nginx 反代（方案 A，可选）
 
+仓库内有一份可直接套用的完整配置：**`deploy/nginx-mynote.conf`**（含 `upstream`、超时、`client_max_body_size` 等）。下面为等价精简版，二选一即可。
+
 ```bash
 sudo apt install -y nginx
 ```
 
-新建 `/etc/nginx/sites-available/mynote`：
+若使用仓库文件：
+
+```bash
+sudo cp /opt/mynote/deploy/nginx-mynote.conf /etc/nginx/sites-available/mynote
+# 按需编辑 server_name、proxy_pass 端口
+```
+
+或手动新建 `/etc/nginx/sites-available/mynote`：
 
 ```nginx
 server {

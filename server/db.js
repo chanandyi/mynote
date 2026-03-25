@@ -1,7 +1,7 @@
-import Database from "better-sqlite3";
 import { mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { DatabaseSync } from "node:sqlite";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -9,7 +9,7 @@ const dataDir = join(root, "data");
 mkdirSync(dataDir, { recursive: true });
 
 const dbPath = join(dataDir, "notes.db");
-const db = new Database(dbPath);
+const db = new DatabaseSync(dbPath);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS notes (
